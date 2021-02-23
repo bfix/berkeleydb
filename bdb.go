@@ -84,11 +84,16 @@ func (handle *Db) OpenWithTxn(filename string, txn *C.DB_TXN, dbtype C.DBTYPE, f
 }
 
 // Open a database file
-func (handle *Db) Open(filename string, dbtype C.DBTYPE, flags C.u_int32_t) error {
+func (handle *Db) Open(filename, dbname string, dbtype C.DBTYPE, flags C.u_int32_t) error {
 	file := C.CString(filename)
 	defer C.free(unsafe.Pointer(file))
+	var dbn *C.char = nil
+	if len(dbname) > 0 {
+		dbn = C.CString(dbname)
+		defer C.free(unsafe.Pointer(dbn))
+	}
 
-	ret := C.go_db_open(handle.db, nil, file, nil, dbtype, flags, 0)
+	ret := C.go_db_open(handle.db, nil, file, dbn, dbtype, flags, 0)
 
 	return createError(ret)
 }

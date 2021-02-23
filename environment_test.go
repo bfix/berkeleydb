@@ -1,10 +1,8 @@
-package berkeleydb_test
+package berkeleydb
 
 import (
 	"os"
 	"testing"
-
-	"github.com/jsimonetti/berkeleydb"
 )
 
 const TestDirectory = "./TEST_ENV"
@@ -14,46 +12,46 @@ func TestNewEnvironment(t *testing.T) {
 	if err != nil && os.IsNotExist(err) {
 		e := os.Mkdir(TestDirectory, os.ModeDir|os.ModePerm)
 		if e != nil {
-			t.Fatal("Failed to create directory: %s", e)
+			t.Fatalf("Failed to create directory: %s", e)
 		}
 	}
 
-	_, err = berkeleydb.NewEnvironment()
+	_, err = NewEnvironment()
 
 	if err != nil {
-		t.Error("Expected environment, got %s", err)
+		t.Errorf("Expected environment, got %s", err)
 	}
 
 }
 
 func TestOpenEnvironment(t *testing.T) {
-	env, _ := berkeleydb.NewEnvironment()
-	err := env.Open(TestDirectory, berkeleydb.DbCreate|berkeleydb.DbInitMpool, 0)
+	env, _ := NewEnvironment()
+	err := env.Open(TestDirectory, DbCreate|DbInitMpool, 0)
 	if err != nil {
-		t.Error("Expected to open DB, got %s", err)
+		t.Errorf("Expected to open DB, got %s", err)
 	}
 
 	err = env.Close()
 	if err != nil {
-		t.Error("Expected to close DB, got %s", err)
+		t.Errorf("Expected to close DB, got %s", err)
 	}
 }
 
 func TestOpenDBInEnvironment(t *testing.T) {
-	env, _ := berkeleydb.NewEnvironment()
-	err := env.Open(TestDirectory, berkeleydb.DbCreate|berkeleydb.DbInitMpool, 0755)
+	env, _ := NewEnvironment()
+	err := env.Open(TestDirectory, DbCreate|DbInitMpool, 0755)
 	if err != nil {
 		t.Error("Expected to open DB, got ", err)
 		return
 	}
 
 	// Now create, open, and close a DB
-	db, err := berkeleydb.NewDBInEnvironment(env)
+	db, err := NewDBInEnvironment(env)
 	if err != nil {
 		t.Error("Expected to create new DB: ", err)
 	}
 
-	err = db.Open(TestFilename, berkeleydb.DbBtree, berkeleydb.DbCreate)
+	err = db.Open(TestFilename, "", DbBtree, DbCreate)
 	if err != nil {
 		t.Error("Expected to open DB, got ", err)
 	}
@@ -71,12 +69,12 @@ func TestOpenDBInEnvironment(t *testing.T) {
 
 	err = env.Close()
 	if err != nil {
-		t.Error("Expected to close DB, got %s", err)
+		t.Errorf("Expected to close DB, got %s", err)
 	}
 }
 func TestTeardown(t *testing.T) {
 	err := os.RemoveAll(TestDirectory)
 	if err != nil {
-		t.Fatal("Expected to remove fixtures, got %s", err)
+		t.Fatalf("Expected to remove fixtures, got %s", err)
 	}
 }
