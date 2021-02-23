@@ -1,6 +1,8 @@
 Skunk
 Matt Butcher <technosophos@gmail.com>
 Copyright (C) 2013 Matt Butcher
+Bernd Fix <brf@hoi-polloi.org>
+Copyright (C) 2021 Bernd Fix >Y<
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

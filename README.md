@@ -1,9 +1,6 @@
-[![GoDoc](https://godoc.org/github.com/jsimonetti/berkeleydb?status.svg)](https://godoc.org/github.com/jsimonetti/berkeleydb)
-[![Travis](https://api.travis-ci.org/jsimonetti/berkeleydb.svg?branch=master)](https://travis-ci.org/jsimonetti/berkeleydb)
+[![GoDoc](https://godoc.org/github.com/bfix/berkeleydb?status.svg)](https://godoc.org/github.com/bfix/berkeleydb)
+[![Travis](https://api.travis-ci.org/bfix/berkeleydb.svg?branch=master)](https://travis-ci.org/bfix/berkeleydb)
 
-
-# BEWARE #
-This library is unmaintained and may stop working at any time.
 
 ### BerkeleyDB Bindings
 
@@ -15,7 +12,6 @@ To build, you will need a relatively recent version of BerkeleyDB.
 
 ### Example
 ```go
-
 package main
 
 import (
@@ -32,25 +28,23 @@ func main() {
                 fmt.Printf("Unexpected failure of CreateDB %s\n", err)
         }
 
-        err = db.Open("./test.db", berkeleydb.DbHash, berkeleydb.DbCreate)
+        err = db.Open("./test.db", "", berkeleydb.DbHash, berkeleydb.DbCreate)
         if err != nil {
                 fmt.Printf("Could not open test_db.db. Error code %s", err)
                 return
         }
         defer db.Close()
 
-        err = db.Put("key", "value")
+        err = db.Put([]byte("key"), byte[]("value"))
         if err != nil {
                 fmt.Printf("Expected clean Put: %s\n", err)
         }
 
-        value, err := db.Get("key")
+        value, err := db.Get([]byte("key"))
         if err != nil {
                 fmt.Printf("Unexpected error in Get: %s\n", err)
                 return
         }
-        fmt.Printf("value: %s\n", value)
-
+        fmt.Printf("value: %s\n", string(value))
 }
-
 ```

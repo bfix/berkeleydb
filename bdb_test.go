@@ -67,7 +67,7 @@ func TestPut(t *testing.T) {
 	db, err := openDB()
 	defer closeDB(db)
 
-	err = db.Put("key", "value")
+	err = db.Put([]byte("key"), []byte("value"))
 	if err != nil {
 		t.Error("Expected clean Put.", err)
 	}
@@ -77,18 +77,18 @@ func TestGet(t *testing.T) {
 	db, err := openDB()
 	defer closeDB(db)
 
-	err = db.Put("key", "value")
+	err = db.Put([]byte("key"), []byte("value"))
 	if err != nil {
 		t.Error("Expected clean Put: ", err)
 	}
 
-	val, err := db.Get("key")
+	val, err := db.Get([]byte("key"))
 	if err != nil {
 		t.Error("Unexpected error in Get: ", err)
 		return
 	}
 
-	if val != "value" {
+	if string(val) != "value" {
 		t.Error("Expected 'value', got ", val)
 	}
 }
@@ -97,17 +97,17 @@ func TestDelete(t *testing.T) {
 	db, err := openDB()
 	defer closeDB(db)
 
-	err = db.Put("key", "value")
+	err = db.Put([]byte("key"), []byte("value"))
 	if err != nil {
 		t.Error("Expected clean Put: ", err)
 	}
 
-	err = db.Delete("key")
+	err = db.Delete([]byte("key"))
 	if err != nil {
 		t.Error("Expected a clean delete, got ", err)
 	}
 
-	err = db.Delete("nosuchkey")
+	err = db.Delete([]byte("nosuchkey"))
 	if err == nil {
 		t.Error("Expected error, got ", err)
 	}

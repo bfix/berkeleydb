@@ -34,6 +34,14 @@ const (
 	DbUnknown = C.DB_UNKNOWN
 )
 
+// Cursor modes.
+const (
+	CrsFirst = C.DB_FIRST
+	CrsNext  = C.DB_NEXT
+	CrsPrev  = C.DB_PREV
+	CrsLast  = C.DB_LAST
+)
+
 // Db is the structure that holds the database connection
 type Db struct {
 	db *C.DB
@@ -136,14 +144,18 @@ func (handle *Db) Rename(oldname, newname string) error {
 	return createError(ret)
 }
 
-// Put a key/value pair into the database
-func (handle *Db) Put(name, value string) error {
-	nname := C.CString(name)
-	defer C.free(unsafe.Pointer(nname))
-	nvalue := C.CString(value)
-	defer C.free(unsafe.Pointer(nvalue))
+func prepDbt(in []byte) *C.DBT {
+	dbt := new(C.DBT)
+	dbt.size = C.uint(len(in))
+	dbt.data = unsafe.Pointer(&in[0])
+	return dbt
+}
 
-	ret := C.go_db_put_string(handle.db, nname, nvalue, 0)
+// Put a key/value pair into the database
+func (handle *Db) Put(key, value []byte) error {
+	dbKey := prepDbt(key)
+	dbVal := prepDbt(value)
+	ret := C.go_db_put(handle.db, dbKey, dbVal, C.uint(0))
 	if ret > 0 {
 		return createError(ret)
 	}
@@ -151,22 +163,18 @@ func (handle *Db) Put(name, value string) error {
 }
 
 // Get a value from the database by key
-func (handle *Db) Get(name string) (string, error) {
-	value := C.CString("")
-	defer C.free(unsafe.Pointer(value))
-	nname := C.CString(name)
-	defer C.free(unsafe.Pointer(nname))
-
-	ret := C.go_db_get_string(handle.db, nname, value)
-	return C.GoString(value), createError(ret)
+func (handle *Db) Get(key []byte) ([]byte, error) {
+	dbKey := prepDbt(key)
+	dbVal := new(C.DBT)
+	ret := C.go_db_get(handle.db, dbKey, dbVal)
+	data := C.GoBytes(unsafe.Pointer(dbVal.data), C.int(dbVal.size))
+	return data, createError(ret)
 }
 
 // Delete a value from the database by key
-func (handle *Db) Delete(name string) error {
-	nname := C.CString(name)
-	defer C.free(unsafe.Pointer(nname))
-
-	ret := C.go_db_del_string(handle.db, nname)
+func (handle *Db) Delete(key []byte) error {
+	dbKey := prepDbt(key)
+	ret := C.go_db_del(handle.db, dbKey)
 	return createError(ret)
 }
 
@@ -183,48 +191,14 @@ func (handle *Db) Cursor() (*Cursor, error) {
 	return &Cursor{dbc}, nil
 }
 
-//GetNext moves the cursor to the next entry and returns the key/value pair
-func (cursor *Cursor) GetNext() (string, string, error) {
-	value := C.CString("")
-	defer C.free(unsafe.Pointer(value))
-	key := C.CString("")
-	defer C.free(unsafe.Pointer(key))
-
-	ret := C.go_cursor_get_next(cursor.dbc, key, value)
-	return C.GoString(key), C.GoString(value), createError(ret)
-}
-
-//GetPrevious moves the cursor to the previous entry and returns the key/value pair
-func (cursor *Cursor) GetPrevious() (string, string, error) {
-	value := C.CString("")
-	defer C.free(unsafe.Pointer(value))
-	key := C.CString("")
-	defer C.free(unsafe.Pointer(key))
-
-	ret := C.go_cursor_get_prev(cursor.dbc, key, value)
-	return C.GoString(key), C.GoString(value), createError(ret)
-}
-
-//GetFirst moves the cursor to the first entry and returns the key/value pair
-func (cursor *Cursor) GetFirst() (string, string, error) {
-	value := C.CString("")
-	defer C.free(unsafe.Pointer(value))
-	key := C.CString("")
-	defer C.free(unsafe.Pointer(key))
-
-	ret := C.go_cursor_get_first(cursor.dbc, key, value)
-	return C.GoString(key), C.GoString(value), createError(ret)
-}
-
-//GetLast moves the cursor to the last entry and returns the key/value pair
-func (cursor *Cursor) GetLast() (string, string, error) {
-	value := C.CString("")
-	defer C.free(unsafe.Pointer(value))
-	key := C.CString("")
-	defer C.free(unsafe.Pointer(key))
-
-	ret := C.go_cursor_get_last(cursor.dbc, key, value)
-	return C.GoString(key), C.GoString(value), createError(ret)
+// Get [FIRST|NEXT|PREV|LAST] record from cursor and return the key/value pair
+func (cursor *Cursor) Get(mode int) ([]byte, []byte, error) {
+	key := new(C.DBT)
+	value := new(C.DBT)
+	ret := C.go_cursor_get(cursor.dbc, key, value, C.int(mode))
+	dKey := C.GoBytes(unsafe.Pointer(key.data), C.int(key.size))
+	dVal := C.GoBytes(unsafe.Pointer(value.data), C.int(value.size))
+	return dKey, dVal, createError(ret)
 }
 
 // UTILITY FUNCTIONS
